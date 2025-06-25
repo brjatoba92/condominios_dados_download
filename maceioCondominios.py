@@ -70,3 +70,44 @@ class MaceioCondominiosScraperReal:
         except Exception as e:
             self.logger.error(f"Erro ao configurar Selenium: {e}")
             return None
+    
+    def buscar_dados_portal_cidadao(self) -> List[Dict]:
+        """
+        Busca dados do Portal do Cidadão de Maceió (dados REAIS)
+        """
+        self.logger.info("Buscando dados do Portal do Cidadão de Maceió")
+        condominios = []
+
+        try:
+            # Acessar serviços de ficha cadastral
+            url_ficha = f"{self.urls_reais['portal_cidadao']}1/ver_servico/69/unidade/ficha+cadastral+de+imoveis/"
+            
+            response = self.session.get(url_ficha, timeout=15)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                self.logger.info("Acesso ao portal do cidadão realizado com sucesso")
+                # Buscar formulários de consulta disponíveis
+                forms = soup.find_all('form')
+                for form in forms:
+                    action = form.get('action', '')
+                    if 'imovel' in action.lower() or 'cadastr' in action.lower():
+                        self.logger.info(f"Encontrado formulário de consulta: {action}")
+                # Buscar links para serviços relacionados a imoveis
+                links_servicos = soup.find_all('a', href=True)
+                servicos_imoveis = []
+
+                for link in links_servicos:
+                    texto = link.get_text().lower()
+                    href = link['href']
+
+                    if any(palavra in texto for palavra in ['inóvel', 'imovel', 'cadastr', 'iptu', 'predial']):
+                        servicos_imoveis.append({
+                            'servico': link.get_text().strip(),
+                            'url': href,
+                            'tipo': 'consulta_imovel'
+                        })
+                condominios.extend(servicos_imoveis)
+                self.logger.info(f"Encontrados {len(servicos_imoveis)} serviços relacionados a imoveis")
+
+        except Exception as e:
+            self.logger.error(f"Erro ao acessar Portal do Cidadão: {e}")
