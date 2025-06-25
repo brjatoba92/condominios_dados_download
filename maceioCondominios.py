@@ -100,7 +100,7 @@ class MaceioCondominiosScraperReal:
                     texto = link.get_text().lower()
                     href = link['href']
 
-                    if any(palavra in texto for palavra in ['inóvel', 'imovel', 'cadastr', 'iptu', 'predial']):
+                    if any(palavra in texto for palavra in ['imóvel', 'imovel', 'cadastr', 'iptu', 'predial']):
                         servicos_imoveis.append({
                             'servico': link.get_text().strip(),
                             'url': href,
@@ -219,3 +219,51 @@ class MaceioCondominiosScraperReal:
         
         return dados_ibge
     
+    def bsucar_dados_transparencia_estado(self) -> List[Dict]:
+        """
+        Busca dados do Portal de Transparência do Estado de Alagoas
+        """
+        self.logger.info("Buscando dados do Portal de Transparência do Estado de Alagoas")
+        dados_transparencia = []
+
+        try:
+            url_transparencia = self.urls_reais['transparencia_estado']
+            response = self.session.get(url_transparencia, timeout=15)
+
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+
+                # Buscar seções de dados disponiveis
+                links_dados = soup.find_all('a', href=True)
+                datasets_encontrados = []
+
+                for link in links_dados:
+                    texto = link.get_text().lower()
+                    href = link['href']
+
+                    if any(palavra in texto for palavra in ['imóv', 'patrim', 'bem', 'propriedade']):
+                        datasets_encontrados.append({
+                            'titulo': link.get_text().strip(),
+                            'url': href,
+                            'categoria': 'patrimonio_imoveis'
+                        })
+                
+                if datasets_encontrados:
+                    dados_transparencia.extend(datasets_encontrados)
+                    self.logger.info(f"Encontrados {len(datasets_encontrados)} datasets relacionados")
+                
+                # Informações gerais do portal
+                portal_info = {
+                    'fonte': 'Portal de Transparencia do Estado de Alagoas',
+                    'url': url_transparencia,
+                    'status': 'ativo',
+                    'datasers_patrimonio': len(datasets_encontrados),
+                    'data_acesso': datetime.now().isoformat()
+                }
+
+                dados_transparencia.append(portal_info)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao buscar dados do Portal de Transparencia do Estado de Alagoas: {e}")
+
+        return dados_transparencia
