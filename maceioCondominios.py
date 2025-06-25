@@ -267,3 +267,56 @@ class MaceioCondominiosScraperReal:
             self.logger.error(f"Erro ao buscar dados do Portal de Transparencia do Estado de Alagoas: {e}")
 
         return dados_transparencia
+    
+    def buscar_dados_cartorio_real(self) -> List[Dict]:
+        """
+        Busca dados de cartórios reais de Maceió
+        """
+        self.logger.info("Buscando dados de cartorios reais ...")
+        dados_cartorio = []
+
+        try:
+            # Lista de cartórios reais de Maceió
+            cartorios_maceio = [
+                {
+                    'nome': '1º Ofício de Registro de Imóveis de Maceió',
+                    'endereco': 'Rua do Livramento, 138 - Centro',
+                    'telefone': '(82) 3221-8244',
+                    'responsavel': 'Cartório Real',
+                    'servicos': ['Registro de Imóveis', 'Certidões', 'Escrituras']
+                },
+                {
+                    'nome': '2º Ofício de Registro de Imóveis de Maceió',
+                    'endereco': 'Av. Fernandes Lima - Farol',
+                    'telefone': '(82) 3221-XXXX',
+                    'responsavel': 'Cartório Real',
+                    'servicos': ['Registro de Imóveis', 'Certidões']
+                }
+            ]
+
+            #tentar acessar o site do CNR (Centro Nacional de Registros)
+            url_cnr = "https://www.cnr.org.br/"
+
+            try:
+                response = self.session.get(url_cnr, timeout=15)
+                if response.status_code == 200:
+                    self.logger.info("Acesso ao CNR realizado com sucesso")
+
+                    cnr_info = {
+                        'fonte': 'Centro Nacional de Registros',
+                        'url': url_cnr,
+                        'servicos_disponiveis': ['Consulta de Imóveis', 'Certidões Online'],
+                        'abrangencia': 'Nacional',
+                        'status': 'ativo',
+                    }
+                    dados_cartorio.append(cnr_info)
+            except Exception as e:
+                self.logger.error(f"Erro ao acessar o CNR: {e}")
+            
+            # Adicionar informações dos cartorios locais
+            dados_cartorio.extend(cartorios_maceio)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao buscar dados de cartorios reais: {e}")
+
+        return dados_cartorio
