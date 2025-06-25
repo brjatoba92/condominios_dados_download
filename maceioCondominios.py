@@ -377,3 +377,40 @@ class MaceioCondominiosScraperReal:
                 continue
 
         return dados_imoveis
+    
+    def coletar_todos_dados_reais(self) -> Dict[str, List[Dict]]:
+        """
+        Coleta dados REAIS de todas as fontes disponíveis
+        """
+        self.logger.info("🚀 Iniciando coleta COMPLETA de dados REAIS...")
+
+        dados_completos = {
+            'portal_cidadao': self.buscar_dados_portal_cidadao(),
+            'sefaz_maceio': self.buscar_dados_sefaz_maceio(),
+            'ibge_oficial': self.buscar_dados_ibge_oficial(),
+            'transparencia_alagoas': self.buscar_dados_transparencia_estado(),
+            'cartorios_reais': self.buscar_dados_cartorio_real(),
+            'sites_imobiliarios': self.buscar_dados_sites_imobiliarios_real(),
+            'metadados': {
+                'dados_coleta': datetime.now().isoformat(),
+                'fontes_ativas': 0,
+                'total_registros': 0,
+                'observacoes': []
+            }
+        }
+
+        # Calcular estatisticas
+        total_registros = 0
+        fontes_ativas = 0
+
+        for fonte, dados in dados_completos.items():
+            if fonte != 'metadados' and dados:
+                fontes_ativas += 1
+                total_registros += len(dados)
+        
+        dados_completos['metadados']['fontes_ativas'] = fontes_ativas
+        dados_completos['metadados']['total_registros'] = total_registros
+
+        self.logger.info(f"✅ Coleta concluída: {fontes_ativas} fontes ativas, {total_registros} registros")
+
+        return dados_completos
