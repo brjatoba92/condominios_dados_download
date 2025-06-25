@@ -16,13 +16,13 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-class MaceioCondominiosScrapperReal:
-   """
+class MaceioCondominiosScraperReal:
+    """
     Classe para baixar dados REAIS de condomínios de prédios da cidade de Maceió
     usando fontes oficiais e públicas
     """
-   
-   def __init__(self):
+    
+    def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -51,3 +51,22 @@ class MaceioCondominiosScrapperReal:
             'ibge_api': 'https://servicodados.ibge.gov.br/api/v1/',
             'dados_abertos_br': 'https://dados.gov.br/dados/conjuntos-dados'
         }
+    
+    def configurar_selenium(self) -> webdriver.Chrome:
+        """
+        Configura o driver Selenium para sites que requerem JavaScript
+        """
+        chrome_options = Options()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--window-size=1920,1080')
+        chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+        
+        try:
+            driver = webdriver.Chrome(options=chrome_options)
+            return driver
+        except Exception as e:
+            self.logger.error(f"Erro ao configurar Selenium: {e}")
+            return None
