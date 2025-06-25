@@ -320,3 +320,60 @@ class MaceioCondominiosScraperReal:
             self.logger.error(f"Erro ao buscar dados de cartorios reais: {e}")
 
         return dados_cartorio
+    
+    def buscar_dados_sites_imobiliarias(self) -> List[Dict]:
+        """
+        Busca dados REAIS de sites imobiliários com foco em Maceió
+        """
+        self.logger.info("Buscando dados de sites imobiliarios reais ...")
+        dados_imoveis = []
+
+        sites_reais = [
+            {
+                'nome': 'VivaReal',
+                'url': 'https://www.vivareal.com.br/venda/alagoas/maceio/apartamento/',
+                'seletor': 'article[data-testid="property-card"]'
+            },
+            {
+                'nome': 'ZapImóveis',
+                'url': 'https://www.zapimoveis.com.br/venda/apartamentos/al+maceio/',
+                'seletor': '[data-testid="listing-card"]'
+            }
+        ]
+
+        for site in sites_reais:
+            try:
+                self.logger.info(f"Processando {site['nome']} ...")
+                response = self.session.get(site['url'], timeout=15)
+
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.content, 'html.parser')
+                    
+                    # Contar total de resultados quando possivel
+                    resultados = soup.find_all(['div', 'article', 'section'])
+                    imoveis_encontrados = 0
+
+                    for resultado in resultados[:10]: # limitar para analise
+                        texto = resultado.get_text().lower()
+                        if any(termo in texto for termo in ['apartamento', 'condominio', 'edificio', 'maceió']):
+                            imoveis_encontrados += 1
+
+                    site_info = {
+                        'site': site['nome'],
+                        'url': site['url'],
+                        'status': 'acessivel',
+                        'imoveis_detectados': imoveis_encontrados,
+                        'data_acesso': datetime.now().isoformat(),
+                        'tipo': 'marketplace_imobiliario'
+                    }
+
+                    dados_imoveis.append(site_info)
+                    self.logger.info(f"Site {site['nome']}:  {imoveis_encontrados} imoveis encontrados")
+                
+                time.sleep(3) # Rate limiting
+
+            except Exception as e:
+                self.logger.warning(f"Erro ao buscar dados do site {site['nome']}: {e}")
+                continue
+
+        return dados_imoveis
