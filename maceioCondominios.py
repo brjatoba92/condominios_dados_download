@@ -111,3 +111,59 @@ class MaceioCondominiosScraperReal:
 
         except Exception as e:
             self.logger.error(f"Erro ao acessar Portal do Cidadão: {e}")
+    
+    def buscar_dados_sefaz_maceio(self) -> List[Dict]:
+        """
+        Busca dados da SEFAZ de Maceió (Sistema de IPTU - dados REAIS)
+        """
+        self.logger.info("Buscando dados da SEFAZ Maceió...")
+        dados_imoveis = []
+        
+        try:
+            # URL do sistema de IPTU
+            url_iptu = f"{self.urls_reais['sefaz_maceio']}n/iptu2022/"
+            
+            response = self.session.get(url_iptu, timeout=15)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Analisar estrutura do sistema de IPTU
+                forms = soup.find_all('form')
+                inputs = soup.find_all('input')
+                selects = soup.find_all('select')
+                
+                sistema_info = {
+                    'url': url_iptu,
+                    'tipo': 'sistema_iptu',
+                    'status': 'ativo',
+                    'formularios_disponiveis': len(forms),
+                    'campos_consulta': []
+                }
+                
+                # Extrair campos de consulta disponíveis
+                for input_field in inputs:
+                    if input_field.get('name'):
+                        sistema_info['campos_consulta'].append({
+                            'campo': input_field.get('name'),
+                            'tipo': input_field.get('type', 'text'),
+                            'placeholder': input_field.get('placeholder', '')
+                        })
+                
+                dados_imoveis.append(sistema_info)
+                self.logger.info("Sistema de IPTU mapeado com sucesso")
+                
+                # Tentar acessar página de busca de inscrição
+                url_busca = f"{self.urls_reais['portal_cidadao']}6/ver_servico/21/unidade/buscar+inscri%C3%A7ao+imobiliaria/"
+                response_busca = self.session.get(url_busca, timeout=10)
+                
+                if response_busca.status_code == 200:
+                    dados_imoveis.append({
+                        'url': url_busca,
+                        'tipo': 'busca_inscricao',
+                        'status': 'disponivel'
+                    })
+        
+        except Exception as e:
+            self.logger.error(f"Erro ao acessar SEFAZ: {e}")
+        
+        return dados_imoveis
