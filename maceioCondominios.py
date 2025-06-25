@@ -167,3 +167,55 @@ class MaceioCondominiosScraperReal:
             self.logger.error(f"Erro ao acessar SEFAZ: {e}")
         
         return dados_imoveis
+    
+    def buscar_dados_ibge_real(self) -> List[Dict]:
+        """
+        Busca dados REAIS do IBGE sobre Maceió
+        """
+        self.logger.info("Buscando dados do IBGE ...")
+        dados_ibge = []
+
+        try:
+            # Código oficial de Maceió no IBGE
+            codigo_maceio = "2704302"
+
+            # Buscar dados básicos de municipios
+            url_municipio = f"{self.urls_reais['ibge_api']}localidades/municipios/{codigo_maceio}"
+            response = self.session.get(url_municipio, timeout=10)
+
+            if response.status_code == 200:
+                dados_municipio = response.json()
+
+                municipio_info = {
+                    'fonte': 'IBGE - Oficial',
+                    'codigo_ibge': dados_municipio.get('id'),
+                    'nome': dados_municipio.get('nome'),
+                    'microrregiao': dados_municipio.get('microrregiao', {}).get('nome'),
+                    'mesorregiao': dados_municipio.get('mesorregiao', {}).get('nome'),
+                    'uf': dados_municipio.get('microrregiao', {}).get('mesorregiao', {}).get('UF', {}).get('sigla'),
+                    'regiao': dados_municipio.get('microrregiao', {}).get('mesorregiao', {}).get('UF', {}).get('regiao', {}).get('nome'),
+                }
+                
+                dados_ibge.append(municipio_info)
+                self.logger.info("Dados IBGE obtidos: {municipio_info['nome']}")
+
+                # Buscar dados de domicilios
+                url_domicilios = f"{self.urls_reais['ibge_api']}agregados/793/periodos/2010/variaveis/96?localidades=N6[{codigo_maceio}]"
+                response_dom = self.session.get(url_domicilios, timeout=10)
+
+                if response_dom.status_code == 200:
+                    dados_domicilios = response_dom.json()
+                    if dados_domicilios:
+                        domicilios_info = {
+                            'fonte': 'IBGE - Censo',
+                            'total_domicilios': dados_domicilios[0].get('resultados', [{}])[0].get('series', [{}])[0].get('serie', {}).get('2010', 'N/A'),
+                            'ano_referencia': '2010',
+                            'tipo': 'domicilios_particulares'
+                        }
+                        dados_ibge.append(domicilios_info)
+        
+        except Exception as e:
+            self.logger.error(f"Erro ao buscar dados do IBGE: {e}")
+        
+        return dados_ibge
+    
