@@ -1,0 +1,98 @@
+{
+  "portal_cidadao_maceio": [
+    {
+      "servico": "Ficha Cadastral de Imóveis",
+      "url": "../../../../../1/redirect_servico/71/",
+      "tipo": "consulta_imovel"
+    }
+  ],
+  "sefaz_maceio": [
+    {
+      "url": "https://online.maceio.al.gov.br/n/iptu2022/",
+      "tipo": "sistema_iptu",
+      "status": "ativo",
+      "formularios_disponiveis": 0,
+      "campos_consulta": []
+    },
+    {
+      "url": "https://www.online.maceio.al.gov.br/6/ver_servico/21/unidade/buscar+inscri%C3%A7ao+imobiliaria/",
+      "tipo": "busca_inscricao",
+      "status": "disponivel"
+    }
+  ],
+  "ibge_oficial": [
+    {
+      "fonte": "IBGE - Oficial",
+      "codigo_ibge": 2704302,
+      "nome": "Maceió",
+      "microrregiao": "Maceió",
+      "mesorregiao": null,
+      "uf": "AL",
+      "regiao": "Nordeste"
+    }
+  ],
+  "transparencia_alagoas": [
+    {
+      "titulo": "PATRIMÔNIO",
+      "url": "/portal/patrimonio",
+      "categoria": "patrimonio_imoveis"
+    },
+    {
+      "titulo": "PATRIMÔNIO",
+      "url": "/portal/patrimonio",
+      "categoria": "patrimonio_imoveis"
+    },
+    {
+      "titulo": "Patrimônio",
+      "url": "/portal/patrimonio",
+      "categoria": "patrimonio_imoveis"
+    },
+    {
+      "fonte": "Portal Transparência AL",
+      "url": "https://transparencia.al.gov.br/",
+      "status": "ativo",
+      "datasets_patrimonio": 3,
+      "data_acesso": "2025-06-25T22:06:18.539201"
+    }
+  ],
+  "cartorios_reais": [
+    {
+      "fonte": "CNR - Central Nacional de Registros",
+      "url": "https://www.cnr.org.br/",
+      "servicos_disponiveis": [
+        "Consulta de Imóveis",
+        "Certidões Online"
+      ],
+      "abrangencia": "Nacional",
+      "status": "ativo"
+    },
+    {
+      "nome": "1º Ofício de Registro de Imóveis de Maceió",
+      "endereco": "Rua do Livramento, 138 - Centro",
+      "telefone": "(82) 3221-8244",
+      "responsavel": "Cartório Real",
+      "servicos": [
+        "Registro de Imóveis",
+        "Certidões",
+        "Escrituras"
+      ]
+    },
+    {
+      "nome": "2º Ofício de Registro de Imóveis de Maceió",
+      "endereco": "Av. Fernandes Lima - Farol",
+      "telefone": "(82) 3221-XXXX",
+      "responsavel": "Cartório Real",
+      "servicos": [
+        "Registro de Imóveis",
+        "Certidões"
+      ]
+    }
+  ],
+  "sites_imobiliarios": [],
+  "metadados": {
+    "data_coleta": "2025-06-25T22:06:25.868523",
+    "fontes_ativas": 5,
+    "total_registros": 11,
+    "observacoes": []
+  }
+}

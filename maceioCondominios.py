@@ -1,4 +1,3 @@
-# Importação das dependencias
 import requests
 import pandas as pd
 import json
@@ -11,8 +10,8 @@ from datetime import datetime
 import re
 import urllib.parse
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -75,9 +74,9 @@ class MaceioCondominiosScraperReal:
         """
         Busca dados do Portal do Cidadão de Maceió (dados REAIS)
         """
-        self.logger.info("Buscando dados do Portal do Cidadão de Maceió")
+        self.logger.info("Buscando dados do Portal do Cidadão de Maceió...")
         condominios = []
-
+        
         try:
             # Acessar serviços de ficha cadastral
             url_ficha = f"{self.urls_reais['portal_cidadao']}1/ver_servico/69/unidade/ficha+cadastral+de+imoveis/"
@@ -86,31 +85,36 @@ class MaceioCondominiosScraperReal:
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, 'html.parser')
                 self.logger.info("Acesso ao portal do cidadão realizado com sucesso")
+                
                 # Buscar formulários de consulta disponíveis
                 forms = soup.find_all('form')
                 for form in forms:
                     action = form.get('action', '')
                     if 'imovel' in action.lower() or 'cadastr' in action.lower():
                         self.logger.info(f"Encontrado formulário de consulta: {action}")
-                # Buscar links para serviços relacionados a imoveis
+                
+                # Buscar links para serviços relacionados a imóveis
                 links_servicos = soup.find_all('a', href=True)
                 servicos_imoveis = []
-
+                
                 for link in links_servicos:
                     texto = link.get_text().lower()
                     href = link['href']
-
+                    
                     if any(palavra in texto for palavra in ['imóvel', 'imovel', 'cadastr', 'iptu', 'predial']):
                         servicos_imoveis.append({
                             'servico': link.get_text().strip(),
                             'url': href,
                             'tipo': 'consulta_imovel'
                         })
+                
                 condominios.extend(servicos_imoveis)
-                self.logger.info(f"Encontrados {len(servicos_imoveis)} serviços relacionados a imoveis")
-
+                self.logger.info(f"Encontrados {len(servicos_imoveis)} serviços relacionados a imóveis")
+        
         except Exception as e:
             self.logger.error(f"Erro ao acessar Portal do Cidadão: {e}")
+        
+        return condominios
     
     def buscar_dados_sefaz_maceio(self) -> List[Dict]:
         """
@@ -172,20 +176,20 @@ class MaceioCondominiosScraperReal:
         """
         Busca dados REAIS do IBGE sobre Maceió
         """
-        self.logger.info("Buscando dados do IBGE ...")
+        self.logger.info("Buscando dados do IBGE...")
         dados_ibge = []
-
+        
         try:
             # Código oficial de Maceió no IBGE
             codigo_maceio = "2704302"
-
-            # Buscar dados básicos de municipios
+            
+            # Buscar dados básicos do município
             url_municipio = f"{self.urls_reais['ibge_api']}localidades/municipios/{codigo_maceio}"
             response = self.session.get(url_municipio, timeout=10)
-
+            
             if response.status_code == 200:
                 dados_municipio = response.json()
-
+                
                 municipio_info = {
                     'fonte': 'IBGE - Oficial',
                     'codigo_ibge': dados_municipio.get('id'),
@@ -193,16 +197,16 @@ class MaceioCondominiosScraperReal:
                     'microrregiao': dados_municipio.get('microrregiao', {}).get('nome'),
                     'mesorregiao': dados_municipio.get('mesorregiao', {}).get('nome'),
                     'uf': dados_municipio.get('microrregiao', {}).get('mesorregiao', {}).get('UF', {}).get('sigla'),
-                    'regiao': dados_municipio.get('microrregiao', {}).get('mesorregiao', {}).get('UF', {}).get('regiao', {}).get('nome'),
+                    'regiao': dados_municipio.get('microrregiao', {}).get('mesorregiao', {}).get('UF', {}).get('regiao', {}).get('nome')
                 }
                 
                 dados_ibge.append(municipio_info)
-                self.logger.info("Dados IBGE obtidos: {municipio_info['nome']}")
-
-                # Buscar dados de domicilios
+                self.logger.info(f"Dados do IBGE obtidos: {municipio_info['nome']}")
+                
+                # Buscar dados de domicílios
                 url_domicilios = f"{self.urls_reais['ibge_api']}agregados/793/periodos/2010/variaveis/96?localidades=N6[{codigo_maceio}]"
                 response_dom = self.session.get(url_domicilios, timeout=10)
-
+                
                 if response_dom.status_code == 200:
                     dados_domicilios = response_dom.json()
                     if dados_domicilios:
@@ -219,28 +223,28 @@ class MaceioCondominiosScraperReal:
         
         return dados_ibge
     
-    def bsucar_dados_transparencia_estado(self) -> List[Dict]:
+    def buscar_dados_transparencia_estado(self) -> List[Dict]:
         """
         Busca dados do Portal de Transparência do Estado de Alagoas
         """
-        self.logger.info("Buscando dados do Portal de Transparência do Estado de Alagoas")
+        self.logger.info("Buscando dados do Portal de Transparência de Alagoas...")
         dados_transparencia = []
-
+        
         try:
             url_transparencia = self.urls_reais['transparencia_estado']
             response = self.session.get(url_transparencia, timeout=15)
-
+            
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, 'html.parser')
-
-                # Buscar seções de dados disponiveis
+                
+                # Buscar seções de dados disponíveis
                 links_dados = soup.find_all('a', href=True)
                 datasets_encontrados = []
-
+                
                 for link in links_dados:
                     texto = link.get_text().lower()
                     href = link['href']
-
+                    
                     if any(palavra in texto for palavra in ['imóv', 'patrim', 'bem', 'propriedade']):
                         datasets_encontrados.append({
                             'titulo': link.get_text().strip(),
@@ -254,27 +258,27 @@ class MaceioCondominiosScraperReal:
                 
                 # Informações gerais do portal
                 portal_info = {
-                    'fonte': 'Portal de Transparencia do Estado de Alagoas',
+                    'fonte': 'Portal Transparência AL',
                     'url': url_transparencia,
                     'status': 'ativo',
-                    'datasers_patrimonio': len(datasets_encontrados),
+                    'datasets_patrimonio': len(datasets_encontrados),
                     'data_acesso': datetime.now().isoformat()
                 }
-
+                
                 dados_transparencia.append(portal_info)
-
+        
         except Exception as e:
-            self.logger.error(f"Erro ao buscar dados do Portal de Transparencia do Estado de Alagoas: {e}")
-
+            self.logger.error(f"Erro ao acessar Transparência AL: {e}")
+        
         return dados_transparencia
     
     def buscar_dados_cartorio_real(self) -> List[Dict]:
         """
         Busca dados de cartórios reais de Maceió
         """
-        self.logger.info("Buscando dados de cartorios reais ...")
+        self.logger.info("Buscando dados de cartórios reais...")
         dados_cartorio = []
-
+        
         try:
             # Lista de cartórios reais de Maceió
             cartorios_maceio = [
@@ -293,41 +297,42 @@ class MaceioCondominiosScraperReal:
                     'servicos': ['Registro de Imóveis', 'Certidões']
                 }
             ]
-
-            #tentar acessar o site do CNR (Centro Nacional de Registros)
+            
+            # Tentar acessar o site do CNR (Central Nacional de Registros)
             url_cnr = "https://www.cnr.org.br/"
-
+            
             try:
-                response = self.session.get(url_cnr, timeout=15)
+                response = self.session.get(url_cnr, timeout=10)
                 if response.status_code == 200:
-                    self.logger.info("Acesso ao CNR realizado com sucesso")
-
+                    self.logger.info("Acesso ao CNR realizado - fonte de dados cartoriais disponível")
+                    
                     cnr_info = {
-                        'fonte': 'Centro Nacional de Registros',
+                        'fonte': 'CNR - Central Nacional de Registros',
                         'url': url_cnr,
                         'servicos_disponiveis': ['Consulta de Imóveis', 'Certidões Online'],
                         'abrangencia': 'Nacional',
-                        'status': 'ativo',
+                        'status': 'ativo'
                     }
                     dados_cartorio.append(cnr_info)
-            except Exception as e:
-                self.logger.error(f"Erro ao acessar o CNR: {e}")
             
-            # Adicionar informações dos cartorios locais
+            except Exception as e:
+                self.logger.warning(f"CNR não acessível: {e}")
+            
+            # Adicionar informações dos cartórios locais
             dados_cartorio.extend(cartorios_maceio)
-
+            
         except Exception as e:
-            self.logger.error(f"Erro ao buscar dados de cartorios reais: {e}")
-
+            self.logger.error(f"Erro ao buscar dados de cartórios: {e}")
+        
         return dados_cartorio
     
-    def buscar_dados_sites_imobiliarias(self) -> List[Dict]:
+    def buscar_dados_sites_imobiliarios_real(self) -> List[Dict]:
         """
         Busca dados REAIS de sites imobiliários com foco em Maceió
         """
-        self.logger.info("Buscando dados de sites imobiliarios reais ...")
+        self.logger.info("Buscando dados de sites imobiliários reais...")
         dados_imoveis = []
-
+        
         sites_reais = [
             {
                 'nome': 'VivaReal',
@@ -340,24 +345,25 @@ class MaceioCondominiosScraperReal:
                 'seletor': '[data-testid="listing-card"]'
             }
         ]
-
+        
         for site in sites_reais:
             try:
-                self.logger.info(f"Processando {site['nome']} ...")
+                self.logger.info(f"Processando {site['nome']}...")
+                
                 response = self.session.get(site['url'], timeout=15)
-
+                
                 if response.status_code == 200:
                     soup = BeautifulSoup(response.content, 'html.parser')
                     
-                    # Contar total de resultados quando possivel
+                    # Contar total de resultados quando possível
                     resultados = soup.find_all(['div', 'article', 'section'])
                     imoveis_encontrados = 0
-
-                    for resultado in resultados[:10]: # limitar para analise
+                    
+                    for resultado in resultados[:10]:  # Limitar para análise
                         texto = resultado.get_text().lower()
-                        if any(termo in texto for termo in ['apartamento', 'condominio', 'edificio', 'maceió']):
+                        if any(termo in texto for termo in ['apartamento', 'condomínio', 'edifício', 'maceió']):
                             imoveis_encontrados += 1
-
+                    
                     site_info = {
                         'site': site['nome'],
                         'url': site['url'],
@@ -366,16 +372,16 @@ class MaceioCondominiosScraperReal:
                         'data_acesso': datetime.now().isoformat(),
                         'tipo': 'marketplace_imobiliario'
                     }
-
+                    
                     dados_imoveis.append(site_info)
-                    self.logger.info(f"Site {site['nome']}:  {imoveis_encontrados} imoveis encontrados")
+                    self.logger.info(f"{site['nome']}: {imoveis_encontrados} imóveis detectados")
                 
-                time.sleep(3) # Rate limiting
-
+                time.sleep(3)  # Rate limiting
+                
             except Exception as e:
-                self.logger.warning(f"Erro ao buscar dados do site {site['nome']}: {e}")
+                self.logger.warning(f"Erro ao processar {site['nome']}: {e}")
                 continue
-
+        
         return dados_imoveis
     
     def coletar_todos_dados_reais(self) -> Dict[str, List[Dict]]:
@@ -383,26 +389,26 @@ class MaceioCondominiosScraperReal:
         Coleta dados REAIS de todas as fontes disponíveis
         """
         self.logger.info("🚀 Iniciando coleta COMPLETA de dados REAIS...")
-
+        
         dados_completos = {
-            'portal_cidadao': self.buscar_dados_portal_cidadao(),
+            'portal_cidadao_maceio': self.buscar_dados_portal_cidadao(),
             'sefaz_maceio': self.buscar_dados_sefaz_maceio(),
-            'ibge_oficial': self.buscar_dados_ibge_oficial(),
+            'ibge_oficial': self.buscar_dados_ibge_real(),
             'transparencia_alagoas': self.buscar_dados_transparencia_estado(),
             'cartorios_reais': self.buscar_dados_cartorio_real(),
             'sites_imobiliarios': self.buscar_dados_sites_imobiliarios_real(),
             'metadados': {
-                'dados_coleta': datetime.now().isoformat(),
+                'data_coleta': datetime.now().isoformat(),
                 'fontes_ativas': 0,
                 'total_registros': 0,
                 'observacoes': []
             }
         }
-
-        # Calcular estatisticas
+        
+        # Calcular estatísticas
         total_registros = 0
         fontes_ativas = 0
-
+        
         for fonte, dados in dados_completos.items():
             if fonte != 'metadados' and dados:
                 fontes_ativas += 1
@@ -410,83 +416,84 @@ class MaceioCondominiosScraperReal:
         
         dados_completos['metadados']['fontes_ativas'] = fontes_ativas
         dados_completos['metadados']['total_registros'] = total_registros
-
+        
         self.logger.info(f"✅ Coleta concluída: {fontes_ativas} fontes ativas, {total_registros} registros")
-
+        
         return dados_completos
     
     def salvar_dados_reais(self, dados: Dict[str, List[Dict]]) -> None:
         """
         Salva os dados REAIS coletados em múltiplos formatos
         """
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
         # Salvar em JSON completo
-        json_file = os.path.join(self.data_dir, f"dados_reais_condominios_maceio_{timestamp}.json")
+        json_file = os.path.join(self.data_dir, f'dados_reais_condominios_maceio_{timestamp}.json')
         with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(dados, f, ensure_ascii=False, indent=2, default=str)
         
-        self.logger.info(f"✅ Dados completos salvos em {json_file}")
-
+        self.logger.info(f"📄 Dados completos salvos: {json_file}")
+        
         # Salvar dados do IBGE em CSV
         if dados['ibge_oficial']:
-            csv_ibge = os.path.join(self.data_dir, f"dados_ibge_maceio_{timestamp}.csv")
+            csv_ibge = os.path.join(self.data_dir, f'dados_ibge_maceio_{timestamp}.csv')
             df_ibge = pd.DataFrame(dados['ibge_oficial'])
             df_ibge.to_csv(csv_ibge, index=False, encoding='utf-8-sig')
-            self.logger.info(f"✅ Dados do IBGE salvos em {csv_ibge}")
-
-        # Salvar dados de Cartorios em CSV
+            self.logger.info(f"📊 Dados IBGE salvos: {csv_ibge}")
+        
+        # Salvar dados de cartórios em CSV
         if dados['cartorios_reais']:
-            csv_cartorio = os.path.join(self.data_dir, f"cartorios_maceio_{timestamp}.csv")
+            csv_cartorio = os.path.join(self.data_dir, f'cartorios_maceio_{timestamp}.csv')
             df_cartorio = pd.DataFrame(dados['cartorios_reais'])
             df_cartorio.to_csv(csv_cartorio, index=False, encoding='utf-8-sig')
             self.logger.info(f"🏛️ Dados cartórios salvos: {csv_cartorio}")
-
-        # Gerar relatorio detalhado
-        self.gerar_relatorio_detalhado(dados, timestamp)
+        
+        # Gerar relatório detalhado
+        self.gerar_relatorio_detalhado_real(dados, timestamp)
     
     def gerar_relatorio_detalhado_real(self, dados: Dict[str, List[Dict]], timestamp: str) -> None:
         """
-        Gera um relatório detalhado com os dados coletados
+        Gera relatório detalhado dos dados REAIS coletados
         """
-        relatorio_file = os.path.join(self.data_dir, f"relatorio_detalhado_condominios_maceio_{timestamp}.md")
+        relatorio_file = os.path.join(self.data_dir, f'relatorio_detalhado_real_{timestamp}.md')
         
         with open(relatorio_file, 'w', encoding='utf-8') as f:
-            f.write("# Relatório Detalhado de Dados de Condomínios em Maceió\n\n")
+            f.write("# RELATÓRIO DETALHADO - DADOS REAIS DE CONDOMÍNIOS MACEIÓ\n\n")
             f.write(f"**Data da Coleta:** {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}\n\n")
             f.write("---\n\n")
-
+            
             # Resumo executivo
             f.write("## 📊 RESUMO EXECUTIVO\n\n")
             metadados = dados.get('metadados', {})
-            f.write(f"**Fontes Ativas:** {metadados.get('fontes_ativas', 0)}\n\n")
-            f.write(f"**Total de Registros:** {metadados.get('total_registros', 0)}\n\n")
+            f.write(f"- **Fontes Ativas:** {metadados.get('fontes_ativas', 0)}\n")
+            f.write(f"- **Total de Registros:** {metadados.get('total_registros', 0)}\n")
             f.write(f"- **Status:** Coleta realizada com sucesso\n\n")
-
+            
             # Detalhes por fonte
             for fonte, registros in dados.items():
                 if fonte == 'metadados':
                     continue
-
+                    
                 f.write(f"## 🔍 {fonte.upper().replace('_', ' ')}\n\n")
                 f.write(f"**Registros encontrados:** {len(registros)}\n\n")
-
+                
                 if registros:
                     f.write("**Principais dados:**\n")
                     for i, registro in enumerate(registros[:3], 1):
-                        f.write(f"{i}.")
+                        f.write(f"{i}. ")
                         if isinstance(registro, dict):
                             principais_chaves = ['nome', 'url', 'fonte', 'tipo', 'servico']
                             for chave in principais_chaves:
                                 if chave in registro:
-                                    f.write(f" {chave.title()}: {registro[chave]} | ")
+                                    f.write(f"{chave.title()}: {registro[chave]} | ")
                             f.write("\n")
                         else:
-                            f.write(f" {registro}\n")
-                        f.write("\n")
+                            f.write(f"{str(registro)[:100]}...\n")
+                    f.write("\n")
                 else:
-                    f.write("Nenhum registro encontrado.\n\n")
-            # Instruções para proximos passos
+                    f.write("*Nenhum registro encontrado nesta fonte.*\n\n")
+            
+            # Instruções para próximos passos
             f.write("## 🚀 PRÓXIMOS PASSOS RECOMENDADOS\n\n")
             f.write("1. **Análise Detalhada:** Revisar os dados coletados para identificar padrões\n")
             f.write("2. **Validação:** Verificar a qualidade e consistência dos dados\n")
@@ -500,7 +507,55 @@ class MaceioCondominiosScraperReal:
             f.write("- Rate limiting aplicado para respeitar servidores\n")
             f.write("- Dados sujeitos à disponibilidade das fontes\n\n")
         
-        self.logger.info(f"✅ Relatório detalhado salvo em {relatorio_file}")
+        self.logger.info(f"📋 Relatório detalhado salvo: {relatorio_file}")
 
+def main():
+    """
+    Execução principal do script com dados REAIS
+    """
+    print("🏢 COLETOR DE DADOS REAIS DE CONDOMÍNIOS - MACEIÓ")
+    print("=" * 60)
+    print("📍 Fontes: Portal do Cidadão, SEFAZ, IBGE, Transparência AL")
+    print("=" * 60)
+    
+    scraper = MaceioCondominiosScraperReal()
+    
+    try:
+        # Coletar dados reais
+        print("\n🔍 Iniciando coleta de dados reais...")
+        dados = scraper.coletar_todos_dados_reais()
+        
+        # Salvar dados
+        print("\n💾 Salvando dados coletados...")
+        scraper.salvar_dados_reais(dados)
+        
+        print(f"\n✅ COLETA CONCLUÍDA COM SUCESSO!")
+        print(f"📁 Dados salvos em: {scraper.data_dir}")
+        
+        # Mostrar estatísticas
+        metadados = dados.get('metadados', {})
+        print(f"\n📊 ESTATÍSTICAS:")
+        print(f"   🎯 Fontes ativas: {metadados.get('fontes_ativas', 0)}")
+        print(f"   📄 Total de registros: {metadados.get('total_registros', 0)}")
+        
+        print(f"\n🔍 DETALHES POR FONTE:")
+        for fonte, registros in dados.items():
+            if fonte != 'metadados':
+                status = "✅" if registros else "⚠️"
+                print(f"   {status} {fonte.replace('_', ' ').title()}: {len(registros)} registros")
+        
+        print(f"\n🚀 Próximos passos:")
+        print(f"   1. Revisar arquivo de log para detalhes técnicos")
+        print(f"   2. Analisar relatório detalhado gerado")
+        print(f"   3. Validar dados coletados")
+        print(f"   4. Configurar coletas automatizadas se necessário")
+    
+    except Exception as e:
+        print(f"❌ Erro durante a execução: {e}")
+        logging.error(f"Erro na execução principal: {e}")
+    
+    finally:
+        print(f"\n📋 Verifique o arquivo de log para informações detalhadas")
 
-            
+if __name__ == "__main__":
+    main()
