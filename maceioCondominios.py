@@ -444,3 +444,63 @@ class MaceioCondominiosScraperReal:
 
         # Gerar relatorio detalhado
         self.gerar_relatorio_detalhado(dados, timestamp)
+    
+    def gerar_relatorio_detalhado_real(self, dados: Dict[str, List[Dict]], timestamp: str) -> None:
+        """
+        Gera um relatório detalhado com os dados coletados
+        """
+        relatorio_file = os.path.join(self.data_dir, f"relatorio_detalhado_condominios_maceio_{timestamp}.md")
+        
+        with open(relatorio_file, 'w', encoding='utf-8') as f:
+            f.write("# Relatório Detalhado de Dados de Condomínios em Maceió\n\n")
+            f.write(f"**Data da Coleta:** {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}\n\n")
+            f.write("---\n\n")
+
+            # Resumo executivo
+            f.write("## 📊 RESUMO EXECUTIVO\n\n")
+            metadados = dados.get('metadados', {})
+            f.write(f"**Fontes Ativas:** {metadados.get('fontes_ativas', 0)}\n\n")
+            f.write(f"**Total de Registros:** {metadados.get('total_registros', 0)}\n\n")
+            f.write(f"- **Status:** Coleta realizada com sucesso\n\n")
+
+            # Detalhes por fonte
+            for fonte, registros in dados.items():
+                if fonte == 'metadados':
+                    continue
+
+                f.write(f"## 🔍 {fonte.upper().replace('_', ' ')}\n\n")
+                f.write(f"**Registros encontrados:** {len(registros)}\n\n")
+
+                if registros:
+                    f.write("**Principais dados:**\n")
+                    for i, registro in enumerate(registros[:3], 1):
+                        f.write(f"{i}.")
+                        if isinstance(registro, dict):
+                            principais_chaves = ['nome', 'url', 'fonte', 'tipo', 'servico']
+                            for chave in principais_chaves:
+                                if chave in registro:
+                                    f.write(f" {chave.title()}: {registro[chave]} | ")
+                            f.write("\n")
+                        else:
+                            f.write(f" {registro}\n")
+                        f.write("\n")
+                else:
+                    f.write("Nenhum registro encontrado.\n\n")
+            # Instruções para proximos passos
+            f.write("## 🚀 PRÓXIMOS PASSOS RECOMENDADOS\n\n")
+            f.write("1. **Análise Detalhada:** Revisar os dados coletados para identificar padrões\n")
+            f.write("2. **Validação:** Verificar a qualidade e consistência dos dados\n")
+            f.write("3. **Integração:** Combinar dados de diferentes fontes\n")
+            f.write("4. **Atualização:** Programar coletas regulares para manter dados atualizados\n\n")
+            
+            # Observações técnicas
+            f.write("## ⚠️ OBSERVAÇÕES TÉCNICAS\n\n")
+            f.write("- Dados coletados de fontes públicas oficiais\n")
+            f.write("- Algumas fontes podem requerer cadastro ou autenticação\n")
+            f.write("- Rate limiting aplicado para respeitar servidores\n")
+            f.write("- Dados sujeitos à disponibilidade das fontes\n\n")
+        
+        self.logger.info(f"✅ Relatório detalhado salvo em {relatorio_file}")
+
+
+            
