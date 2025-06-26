@@ -414,3 +414,33 @@ class MaceioCondominiosScraperReal:
         self.logger.info(f"✅ Coleta concluída: {fontes_ativas} fontes ativas, {total_registros} registros")
 
         return dados_completos
+    
+    def salvar_dados_reais(self, dados: Dict[str, List[Dict]]) -> None:
+        """
+        Salva os dados REAIS coletados em múltiplos formatos
+        """
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        
+        # Salvar em JSON completo
+        json_file = os.path.join(self.data_dir, f"dados_reais_condominios_maceio_{timestamp}.json")
+        with open(json_file, 'w', encoding='utf-8') as f:
+            json.dump(dados, f, ensure_ascii=False, indent=2, default=str)
+        
+        self.logger.info(f"✅ Dados completos salvos em {json_file}")
+
+        # Salvar dados do IBGE em CSV
+        if dados['ibge_oficial']:
+            csv_ibge = os.path.join(self.data_dir, f"dados_ibge_maceio_{timestamp}.csv")
+            df_ibge = pd.DataFrame(dados['ibge_oficial'])
+            df_ibge.to_csv(csv_ibge, index=False, encoding='utf-8-sig')
+            self.logger.info(f"✅ Dados do IBGE salvos em {csv_ibge}")
+
+        # Salvar dados de Cartorios em CSV
+        if dados['cartorios_reais']:
+            csv_cartorio = os.path.join(self.data_dir, f"cartorios_maceio_{timestamp}.csv")
+            df_cartorio = pd.DataFrame(dados['cartorios_reais'])
+            df_cartorio.to_csv(csv_cartorio, index=False, encoding='utf-8-sig')
+            self.logger.info(f"🏛️ Dados cartórios salvos: {csv_cartorio}")
+
+        # Gerar relatorio detalhado
+        self.gerar_relatorio_detalhado(dados, timestamp)
